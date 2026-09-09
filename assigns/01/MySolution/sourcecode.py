@@ -13,7 +13,6 @@ def print_dots(i: int) -> None:
     # end of [if]
 # end of [print_dots]
 
-
 def print_row(i: int) -> None:
     print_dots(i)
     print("Q ", end="")
@@ -21,13 +20,11 @@ def print_row(i: int) -> None:
     print()
 # end of [print_row]
 
-
 def print_board(bd) -> None:
     for i in range(8):
         print_row(bd[i])
     print()
 # end of [print_board]
-
 
 def board_get(bd, i: int) -> int:
     if 0 <= i <= 7:
@@ -37,7 +34,6 @@ def board_get(bd, i: int) -> int:
     # end of [if]
 # end of [board_get]
 
-
 def board_set(bd, i: int, j: int):
     if 0 <= i <= 7:
         return bd[:i] + (j,) + bd[i + 1:]
@@ -46,11 +42,9 @@ def board_set(bd, i: int, j: int):
     # end of [if]
 # end of [board_set]
 
-
 def safety_test1(i0: int, j0: int, i1: int, j1: int) -> bool:
     return j0 != j1 and abs(i0 - i1) != abs(j0 - j1)
 # end of [safety_test1]
-
 
 def safety_test2(i0: int, j0: int, bd, i: int) -> bool:
     if i >= 0:
@@ -63,7 +57,6 @@ def safety_test2(i0: int, j0: int, bd, i: int) -> bool:
         return True
     # end of [if]
 # end of [safety_test2]
-
 
 def search(bd, i: int, j: int, nsol: int) -> int:
     # Every recursive call in the original [search] is in tail position,
@@ -100,13 +93,17 @@ def search(bd, i: int, j: int, nsol: int) -> int:
     # end of [while]
 # end of [search]
 
-
 def main() -> None:
     sys.setrecursionlimit(10000)
     bd0 = (0, 0, 0, 0, 0, 0, 0, 0)
     search(bd0, 0, 0, 0)
+    print(safety_test1(0,0,1,1))
+    print(safety_test1(0,0,1,2))
+    print(safety_test1(0,0,0,0))
+    print(safety_test1(0,0,7,7))
+    print(safety_test1(0,7,7,0))
+    print(safety_test1(0,0,7,1))
 # end of [main]
-
 
 if __name__ == "__main__":
     main()
