@@ -97,12 +97,31 @@ def main() -> None:
     sys.setrecursionlimit(10000)
     bd0 = (0, 0, 0, 0, 0, 0, 0, 0)
     search(bd0, 0, 0, 0)
+
+    # board_get
+    print(board_get(bd0,7))
+    print(board_get(bd0,3))
+    print(board_get(bd0,1))
+    print(board_get(bd0,-1))
+
+    # board_set
+    print(board_set(bd0, -1, 8))
+    print(board_set(bd0, 2, 3))
+    print(board_set(bd0, 0, 1))
+    print(board_set(bd0, 4, 7))
+
+    # safety_test1
     print(safety_test1(0,0,1,1))
     print(safety_test1(0,0,1,2))
     print(safety_test1(0,0,0,0))
     print(safety_test1(0,0,7,7))
     print(safety_test1(0,7,7,0))
     print(safety_test1(0,0,7,1))
+
+    # safety_test2
+    print(safety_test2(3,6,bd0,2))
+    print(safety_test2(3,0,bd0,2))
+    
 # end of [main]
 
 if __name__ == "__main__":
