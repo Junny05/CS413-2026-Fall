@@ -1,0 +1,291 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  columns=fullflexible,
+  breaklines=true
+}
+
+\title{An Intuitive Introduction to Lambda Calculus}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+Lambda calculus is easiest to understand as a \textbf{tiny programming
+language where everything is built out of functions}.
+
+Despite having almost nothing in it, lambda calculus is powerful enough
+to express essentially any computation a normal programming language
+can perform. It is one of the theoretical foundations of functional
+programming and computer science.
+
+\section{Start with an Ordinary Function}
+
+Suppose you have
+\[
+f(x)=x+1.
+\]
+
+Lambda calculus asks: why bother giving the function a name such as
+\(f\)? We can simply write the function itself:
+\[
+\lambda x.\;x+1.
+\]
+
+Read this as:
+
+\begin{quote}
+``A function that takes \(x\) and returns \(x+1\).''
+\end{quote}
+
+The symbol \(\lambda\) essentially means ``here comes an anonymous
+function.''
+
+In Python, the corresponding idea is:
+
+\begin{lstlisting}[language=Python]
+lambda x: x + 1
+\end{lstlisting}
+
+So the notation is not as exotic as it first looks.
+
+\section{Applying a Function}
+
+If we want to apply
+\[
+\lambda x.\;x+1
+\]
+to \(5\), we write
+\[
+(\lambda x.\;x+1)\;5.
+\]
+
+The intuitive rule is extremely simple:
+
+\begin{quote}
+Replace \(x\) with \(5\).
+\end{quote}
+
+Thus
+\[
+(\lambda x.\;x+1)\;5
+\]
+becomes
+\[
+5+1,
+\]
+and therefore
+\[
+6.
+\]
+
+This replacement process is called \textbf{beta reduction}.
+
+\section{The Surprising Part: Pure Lambda Calculus Has Almost Nothing Else}
+
+Strictly speaking, pure lambda calculus does not even start with
+numbers, addition, \texttt{if} statements, loops, or Boolean values.
+
+It has only three kinds of expressions:
+
+\[
+\boxed{x}
+\]
+a variable,
+
+\[
+\boxed{\lambda x.M}
+\]
+a function, and
+
+\[
+\boxed{M\;N}
+\]
+the application of one expression to another.
+
+That is essentially the entire language.
+
+The astonishing result is that \textbf{this is enough to represent
+arbitrary computation}.
+
+\section{Functions Can Consume Functions}
+
+Consider
+\[
+\lambda f.\lambda x.f\;x.
+\]
+
+It means:
+
+\begin{quote}
+Take a function \(f\). Then take a value \(x\). Apply \(f\) to \(x\).
+\end{quote}
+
+For example, imagine
+\[
+f=\lambda y.y+1.
+\]
+
+Then
+\[
+(\lambda f.\lambda x.f\;x)\;f\;5
+\]
+eventually gives
+\[
+f(5)=6.
+\]
+
+This ability to treat functions just like ordinary values is the
+central idea.
+
+You can \textbf{pass a function into another function, return a
+function from a function, and even use functions to represent data}.
+
+\section{Numbers Can Be Functions}
+
+Here is where lambda calculus becomes especially clever. It can
+represent the number \(2\) as
+\[
+\lambda f.\lambda x.f(f(x)).
+\]
+
+Why would that mean \(2\)?
+
+Think of a number as answering the question:
+
+\begin{quote}
+\textbf{How many times should I perform an operation?}
+\end{quote}
+
+Thus
+\[
+0=\lambda f.\lambda x.x
+\]
+means apply \(f\) zero times,
+
+\[
+1=\lambda f.\lambda x.f(x)
+\]
+means apply it once,
+
+\[
+2=\lambda f.\lambda x.f(f(x))
+\]
+means apply it twice, and
+
+\[
+3=\lambda f.\lambda x.f(f(f(x)))
+\]
+means apply it three times.
+
+These are called \textbf{Church numerals}, after Alonzo Church, who
+developed lambda calculus in the 1930s.
+
+For instance, if
+\[
+f(x)=x+10,
+\]
+then Church numeral \(3\) gives
+\[
+f(f(f(0)))=30.
+\]
+
+The lambda expression itself does not know anything about the number
+\(3\) in the conventional sense. ``Three'' is encoded as
+\textbf{doing something three times}.
+
+\section{Even TRUE and FALSE Can Be Functions}
+
+Here is another elegant trick. Define
+\[
+\mathrm{TRUE}=\lambda x.\lambda y.x
+\]
+and
+\[
+\mathrm{FALSE}=\lambda x.\lambda y.y.
+\]
+
+Why?
+
+\(\mathrm{TRUE}\) simply means:
+
+\begin{quote}
+Given two things, choose the first one.
+\end{quote}
+
+While \(\mathrm{FALSE}\) means:
+
+\begin{quote}
+Given two things, choose the second one.
+\end{quote}
+
+Now an \texttt{if} expression becomes almost trivial:
+\[
+\mathrm{IF}=\lambda b.\lambda x.\lambda y.b\;x\;y.
+\]
+
+Suppose
+\[
+\mathrm{IF}\;\mathrm{TRUE}\;A\;B.
+\]
+
+Since \(\mathrm{TRUE}\) chooses its first argument,
+\[
+\mathrm{TRUE}\;A\;B \longrightarrow A.
+\]
+
+Similarly,
+\[
+\mathrm{IF}\;\mathrm{FALSE}\;A\;B \longrightarrow B.
+\]
+
+So we have effectively constructed Boolean logic using
+\textbf{nothing but functions}.
+
+\section{The Big Idea}
+
+Lambda calculus is not primarily interesting because it is a convenient
+way to write programs. It is interesting because it asks a much deeper
+question:
+
+\begin{quote}
+\textbf{What are the minimum ingredients necessary for computation?}
+\end{quote}
+
+It gives a remarkable answer:
+\[
+\boxed{\text{functions}+\text{variables}+\text{function application}}.
+\]
+
+These are enough.
+
+Numbers can be represented by functions. Booleans can be represented by
+functions. Data structures can be represented by functions. Recursion
+can even be constructed from functions.
+
+That is why lambda calculus can initially feel like someone saying
+``everything is a function'' and then taking that idea absurdly
+seriously---until you discover that it actually works.
+
+\section{Where to Go Next}
+
+After this intuitive introduction, the next important concepts are
+\textbf{beta reduction and variable substitution}, especially the
+distinction between \textbf{free and bound variables}. Those ideas form
+the basis for working through lambda-calculus expressions formally.
+
+\end{document}
