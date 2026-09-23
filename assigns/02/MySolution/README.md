@@ -1,0 +1,146 @@
+# Assignment 2: Pairs, Projections, and an Eight-Queens Translation
+
+## Prompt & verification:
+- "Please do everything according to Assign02.md"
+- Claude set up the initial files and then, I asked for it to double check
+  since I noticed some mistakes
+- "Double check everything within the files"
+- I also double checked the files within to make sure they were outputting the
+  right files and answers by checking online. The test cases were generated through
+  claude code. I made sure those test cases were also right at the end. Everything
+  below is the changes that Claude Code has made.
+
+## Files
+
+- `lambda0.py` — the starter interpreter, extended with `T0Mpair`,
+  `T0Mpfst`, `T0Mpsnd` support in `t0erm_size`, `t0erm_fvset`,
+  `t0erm_subst0`, and `t0erm_cbv_evaluate0`.
+- `TEST/test02_lambda0.py` — tests for the pair/projection extension.
+- `sourcecode.dats` — the original ATS2 eight-queens solution (from
+  Assignment 1's `MySolution/sourcecode.dats`), copied unchanged.
+- `queens_lambda0.py` — the ATS2 program translated into a LAMBDA0
+  `t0erm`, plus a driver that evaluates it.
+- `TEST/test03_queens.py` — tests for the translation.
+- `TEST/test01_lambda0.py`, `TEST/Makefile` — copies of the starter
+  tests and Makefile, so they run against `MySolution/lambda0.py`
+  (each test file puts its parent directory, `MySolution/`, first on
+  `sys.path`).
+
+## Part 1–2: pairs and projections
+
+No new primitives were needed for this part. Each function got one new
+case per constructor:
+
+- `t0erm_size`: a pair or projection costs 1 node plus the size(s) of
+  its subterm(s), the same pattern already used for `T0Mop1`/`T0Mop2`.
+- `t0erm_fvset`: the free variables of a pair are the union of both
+  components'; a projection's are its operand's. Neither binds a
+  variable, unlike `T0Mlam`/`T0Mfix`.
+- `t0erm_subst0`: recurses into both components (or the operand),
+  rebuilding the same constructor, no binder to stop at, unlike the
+  `T0Mlam`/`T0Mfix` cases already in the file.
+- `t0erm_cbv_evaluate0`: `T0Mpair(t1, t2)` evaluates `t1` then `t2` and
+  is a value only once both are; `T0Mpfst`/`T0Mpsnd` evaluate their
+  operand and require it to reduce to a `T0Mpair`, else raise
+  `TypeError`. Both components are always evaluated, even when a
+  projection only uses one — `t0erm_cbv_evaluate0(T0Mpsnd(T0Mpair(x, y)))`
+  evaluates `x` for its side effects (e.g. a division by zero) before
+  discarding it. This is tested directly (`test_left_to_right_evaluation_order`,
+  `test_both_components_evaluated_even_if_unused_by_projection`).
+
+## Part 4: translating the eight-queens solver
+
+### Mapping to LAMBDA0
+
+| ATS2 | LAMBDA0 |
+| --- | --- |
+| `int8` tuple `bd` | A right-nested chain of `T0Mpair`s (a cons-list), one per row, terminated by the sentinel `T0Mint(-1)` — the same value ATS2's `board_get` returns out of range. |
+| non-recursive `fun safety_test1` | A plain curried `T0Mlam` chain (`i0 -> j0 -> i1 -> j1 -> ...`), no `T0Mfix` needed. |
+| recursive `fun board_get`, `board_set`, `safety_test2`, `search` | `T0Mfix` on the first argument, with the remaining arguments as nested `T0Mlam`s; a recursive call re-applies the whole `T0Mfix` term to all its arguments (`APP(rec, ...)` in `queens_lambda0.py`), since `T0Mfix`/`T0Mlam` each bind exactly one argument. `board_get`/`board_set` walk the pair chain by index instead of ATS2's `if i=0 ... else if i=1 ...` chain, so the same code works for any board size `n`. |
+| `abs`, `andalso` | Not primitives in `lambda0.py`; expressed with existing constructs. `ABS(e) = let x = e in if x < 0 then -x else x` (bound once via a `let`-as-application so a side-effecting `e` runs only once); `AND(a, b) = if a then b else false`, the standard short-circuit encoding of `andalso`. |
+| `let val x = e1 in e2 end` | `(lambda x. e2) e1` — `T0Mapp(T0Mlam(x, e2), e1)`, which evaluates `e1` exactly once before `e2` runs under call-by-value, matching ATS2's strict `val`. |
+| `print!`/`print_board` + returned `nsol` | LAMBDA0 has no I/O, so instead of printing each solution `search` collects it: the term returns the pair `(nsol, sols)`, where `sols` is a pair-chain of solution boards in print order. Python only reads this value back and prints it in ATS2's format (`format_board`). |
+
+No new interpreter primitives were required: `T0Mop2` already supports
+the comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`) the translation
+needs, alongside `+ - * / %`. Comparisons already produce `T0Mbtf`, as
+required.
+
+`queens_lambda0.py` parameterizes the whole translation by board size
+`n` (`build_queens(n)`), so the same `t0erm` construction is exercised
+for `n = 1..8` in tests, not just the classic 8x8 board.
+
+### Deviations from a literal translation
+
+- **Printing becomes a returned list.** The original both enumerates
+  (prints every solution) and counts (returns `nsol`), so the
+  translation keeps both: on a solution it evaluates
+  `let r = search(bd, i, j+1, nsol+1) in (pfst r, cons(bd1, psnd r))`
+  in place of `print_board(bd1); search(bd, i, j+1, nsol+1)`, and the
+  base case returns `(nsol, NIL)` in place of `nsol`. Everything else
+  (including the `let val bd1 = board_set(bd, i, j)` binding) follows
+  the ATS2 branch structure unchanged.
+- **Why the list is built on the way out (call-by-value).** A first
+  version threaded a `sols` accumulator through every call, as ATS2's
+  tail-recursive style suggests. Under this substitution-based
+  interpreter that was about 2x slower (~100s vs ~52s for 8x8): the
+  growing list got substituted into the body and re-evaluated on every
+  one of the ~17,700 search steps. Consing on return touches the list
+  only once per solution, so enumeration costs about the same as
+  counting alone (measured: ~52s either way on this machine).
+- **Call-by-value and recursion depth.** ATS2's `search` is written as
+  a tail call, which ATS2 compiles into a loop; `t0erm_cbv_evaluate0`
+  has no such tail-call optimization, so each `search` step is a real,
+  non-tail Python call. The 8-queens search takes about 17,700 such
+  steps (confirmed by instrumenting the Assignment 1 Python
+  translation), which overflows Python's default recursion limit long
+  before reaching a full board. Rather than restructure the
+  interpreter to be tail-call optimized, `queens_lambda0.run_with_deep_recursion`
+  runs the evaluation on a thread with a raised `sys.setrecursionlimit`
+  and a larger C stack; the interpreter and the translated term
+  themselves are unmodified. This is only a runtime accommodation, not
+  a change to `t0erm_cbv_evaluate0`'s logic.
+
+
+## Running
+
+From `assigns/02/`:
+
+```sh
+python3 MySolution/TEST/test02_lambda0.py -v   # pairs/projections
+python3 MySolution/TEST/test03_queens.py -v    # eight-queens translation
+python3 MySolution/queens_lambda0.py           # run the translation directly
+```
+
+Or all tests together (starter tests included):
+
+```sh
+cd MySolution/TEST && make
+```
+
+`test03_queens.py` takes about a minute, mostly the single 8x8
+evaluation (about 50s), which is run once and shared by all the
+8-queens tests.
+
+## Results
+
+- All 27 tests from the starter `TEST/test01_lambda0.py` pass unchanged
+  against the extended `lambda0.py`.
+- All 31 tests in `TEST/test02_lambda0.py` pass, covering size,
+  free variables, substitution (including under `T0Mlam`/`T0Mfix`
+  binders), evaluation order, nested pairs, mixed-value pairs,
+  functions over pairs, and the non-pair-projection `TypeError` case.
+- `queens_lambda0.py` evaluates the translated term to
+  `(92, <92 boards>)` for the classic 8x8 board. Its printed output
+  (`Solution #1:` .. `Solution #92:` plus the boards) is **identical**
+  (checked with `diff`) to the output of the verified Assignment 1
+  Python translation of `sourcecode.dats` (`sourcecode.py`): same
+  boards, same order.
+- All 18 tests in `TEST/test03_queens.py` pass: `board_get`/`board_set`
+  boundary behavior; `safety_test1`/`safety_test2` against synthetic
+  boards, a known solution (`[0,4,7,5,2,6,1,3]`), and a Python reference
+  over 20 random boards; the counts for `n = 1..8` (1, 0, 0, 2, 10, 4,
+  40, 92); and, for every `n = 1..8`, that each returned board has `n`
+  queens with no shared row, column, or diagonal, that the boards are
+  distinct, and that they come in the same (lexicographic) order as an
+  independent brute-force enumeration.
