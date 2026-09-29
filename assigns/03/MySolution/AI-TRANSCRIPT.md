@@ -34,8 +34,25 @@ Claude Code (model: Claude Opus 5.5)
   ambiguity it had resolved (the meaning of "change its input", now A3/Q3).
 
 ## How I reviewed the output
-- Read every requirement against the brief; confirm each traceability entry. -->
-- Check the proposed numbers (A6, A10, QR-01, QR-03, QR-04) are ones you can defend. -->
-- Confirm the question list is what *you* would ask; record any real answers
-       from the instructor in §4 of REQUIREMENTS.md and update the assumptions. -->
-- Note anything you changed, added, or removed after reading the AI draft. -->
+- Read every requirement against the brief; confirm each traceability entry.
+- Checked the proposed numbers (A6, A10, QR-01, QR-03, QR-04)
+- Confirmed the question list
+- Verified internal consistency: requirement IDs referenced in the traceability
+  table, acceptance checks, and review notes all point to requirements that
+  actually exist in the document.
+- Checked the system-boundary diagram against the brief to confirm nothing was
+  drawn as in-scope that the brief assigns to the external compiler, or vice versa.
+- Re-read each MoSCoW priority and checked it against what the brief implies
+  (nothing marked Must that the brief only mentions in passing).
+- Sanity-checked the acceptance checks by mentally running them against the
+  current `assigns/02/MySolution/lambda0.py` interpreter, to catch any that
+  assume a capability that doesn't exist yet.
+- Looked for unsupported claims — statements presented as fact that aren't
+  actually backed by the brief or the code (this is what caught the fabricated
+  "early draft" in review note 6).
+- Confirmed quoted text attributed to the brief actually appears in
+  `LAMBDA-UI-informal-requirements.md`.
+- Checked that assumptions don't quietly contradict each other (e.g. A3 vs A10
+  on the meaning of "input").
+- Confirmed the "Out of date" / "Not run" / "Could not complete" verdicts are
+  distinct and non-overlapping, so a grader can't hit an ambiguous case.
