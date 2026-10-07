@@ -6,7 +6,7 @@ Architecture: see [ARCHITECTURE.md](ARCHITECTURE.md). Test results and the manua
 
 ## Runtime versions
 
-- Python 3.13.11 (used for development and all test runs). `lambda1.py` requires Python 3.12+ for `type` statements; Python 3.12 has not been tested.
+- Python 3.12.15 and Python 3.13.11. All 109 tests pass on both. `lambda1.py` requires Python 3.12+ for `type` statements.
 - pytest 9.1.1 (the only dependency, pinned in `requirements.txt`)
 - Standard library only for the web layer (`http.server`, `email`, `urllib`)
 
