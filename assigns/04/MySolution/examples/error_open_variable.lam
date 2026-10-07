@@ -1,0 +1,2 @@
+# Lint reports: Undeclared variable(s): x
+D0Eop2("+", D0Evar("x"), D0Eint(1))

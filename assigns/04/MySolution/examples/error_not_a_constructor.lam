@@ -1,0 +1,2 @@
+# Input error: only LAMBDA constructor calls are accepted
+__import__("os").getcwd()
