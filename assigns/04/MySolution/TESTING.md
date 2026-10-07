@@ -42,20 +42,20 @@ No browser automation was run for this document. Start the server (`./.venv/bin/
 
 | ID | Steps | Expected outcome | Observed | Pass/Fail |
 | --- | --- | --- | --- | --- |
-| B1 | Load page. | Source menu shows Choose a UTF-8 text file, Manual input, Factorial (canned), Fibonacci (canned). Source "none", revision 0. Execute is disabled and its reason is shown. | | |
-| B2 | Click Factorial (canned). Click Interpret. | Source "Factorial (canned)", revision 1. Result shows `D0Vint(arg1=120)` with the revision and outcome. | | |
-| B3 | Click Fibonacci (canned). Click Interpret. | Revision 2. Result shows `D0Vint(arg1=55)`. The earlier factorial result is gone. | | |
-| B4 | Click Manual input. Type `D0Evar("x")`. Click Apply changes. | Revision increments. Previous results are cleared. Editor shows the applied text. | | |
-| B5 | Type an edit without applying. Try Lint and the source menu buttons. Then click Discard changes. | Menu and tool buttons are disabled while edits are unapplied. Discard restores the applied text. | | |
-| B6 | Apply a whitespace-only edit. Then try to load a non-UTF-8 file with Choose a file. | Each is rejected with a message. Previous applied source and revision remain. Rejected text stays in the editor for correction. | | |
-| B7 | Load factorial. Check the button row and Execute. Click Type-check, then Compile. | Buttons appear in order Lint, Interpret, Type-check, Compile, Execute. Execute is disabled with an explanation. Type-check and Compile each report "not yet implemented". | | |
-| B8 | Manual input `D0Evar("x")`, apply, click Lint. Then edit to `D0Elet("x", D0Eint(1), D0Evar("x"))`, apply, click Lint. | First: error naming `x`. Second: "No free variables found." | | |
-| B9 | Enter `D0Eint(` and click Interpret. Then enter `D0Eop2("/", D0Eint(1), D0Eint(0))` and click Interpret. | First: input (syntax) error. Second: runtime error mentioning ZeroDivisionError. Messages are distinguishable. | | |
-| B10 | Enter `D0Evar("<b>x</b>")`, apply, Lint. Enter a multi-line expression and check the output. | `<b>` text appears literally, not as bold. Multi-line source and output keep their line breaks. | | |
-| B11 | Load Fibonacci with `D0Eint(32)` in the editor (apply), click Interpret. Watch the status and buttons while it runs. | Status shows Busy while running; buttons are disabled. After about 5 seconds the run stops with a timeout message and controls come back. | | |
-| B12 | After B11, click Interpret on a short program (factorial). | Controls work again; the run completes normally (retry works). | | |
+| B1 | Load page. | Source menu shows Choose a UTF-8 text file, Manual input, Factorial (canned), Fibonacci (canned). Source "none", revision 0. Execute is disabled and its reason is shown. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B2 | Click Factorial (canned). Click Interpret. | Source "Factorial (canned)", revision 1. Result shows `D0Vint(arg1=120)` with the revision and outcome. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B3 | Click Fibonacci (canned). Click Interpret. | Revision 2. Result shows `D0Vint(arg1=55)`. The earlier factorial result is gone. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B4 | Click Manual input. Type `D0Evar("x")`. Click Apply changes. | Revision increments. Previous results are cleared. Editor shows the applied text. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B5 | Type an edit without applying. Try Lint and the source menu buttons. Then click Discard changes. | Menu and tool buttons are disabled while edits are unapplied. Discard restores the applied text. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B6 | Apply a whitespace-only edit. Then try to load a non-UTF-8 file with Choose a file. | Each is rejected with a message. Previous applied source and revision remain. Rejected text stays in the editor for correction. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B7 | Load factorial. Check the button row and Execute. Click Type-check, then Compile. | Buttons appear in order Lint, Interpret, Type-check, Compile, Execute. Execute is disabled with an explanation. Type-check and Compile each report "not yet implemented". | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B8 | Manual input `D0Evar("x")`, apply, click Lint. Then edit to `D0Elet("x", D0Eint(1), D0Evar("x"))`, apply, click Lint. | First: error naming `x`. Second: "No free variables found." | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B9 | Enter `D0Eint(` and click Interpret. Then enter `D0Eop2("/", D0Eint(1), D0Eint(0))` and click Interpret. | First: input (syntax) error. Second: runtime error mentioning ZeroDivisionError. Messages are distinguishable. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B10 | Enter `D0Evar("<b>x</b>")`, apply, Lint. Enter a multi-line expression and check the output. | `<b>` text appears literally, not as bold. Multi-line source and output keep their line breaks. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B11 | Load Fibonacci with `D0Eint(32)` in the editor (apply), click Interpret. Watch the status and buttons while it runs. | Status shows Busy while running; buttons are disabled. After about 5 seconds the run stops with a timeout message and controls come back. | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
+| B12 | After B11, click Interpret on a short program (factorial). | Controls work again; the run completes normally (retry works). | Performed manually by the student, who reports it passed; per-step notes not recorded. | Pass (student report) |
 
 ## Known gaps
 
 - Button order (F4) and literal line-break rendering (F9) are checked by eye in B7 and B10, not by tests.
-- No browser automation has been run; the browser rows above are unverified until someone performs them.
+- No browser automation has been run. The browser rows were performed manually by the student, who reports they passed; per-step observations were not written down.
