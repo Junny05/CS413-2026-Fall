@@ -2,26 +2,32 @@
 
 ## Component diagram
 
-```mermaid
-flowchart TD
-    app["app.py<br/>HTTP adapter"] --> view["view.py<br/>render_page(ViewState)"]
-    app --> controller["controller.py<br/>Controller"]
-    app --> model_mod["model.py<br/>SourceModel, decode_upload"]
-    controller --> model_mod
-    controller --> view_state["controller.ViewState<br/>(plain data)"]
-    view --> view_state
-    controller --> backend["lambda_backend.py<br/>language-tool adapter"]
-    controller --> samples["samples.py<br/>canned programs"]
-    backend --> lambda1["lambda1.py<br/>interpreter"]
-    model_mod --> backend
+Arrows point from a module to the modules it imports. Module-level imports only, checked against the source.
+
+```
+app.py  (HTTP adapter)
+ |-- controller.py  (Controller)
+ |     |-- model.py          (SourceModel, decode_upload, MANUAL_NAME)
+ |     |     '-- lambda_backend.py  (Operation, Result, Status types only)
+ |     |-- lambda_backend.py (run operations)
+ |     '-- samples.py        (canned FACTORIAL, FIBONACCI)
+ |-- model.py          (SourceModel, MAX_SOURCE_BYTES, ModelError)
+ |-- view.py           (render_page)
+ |     |-- controller.py     (ViewState, BUTTON_ORDER, CANNED)
+ |     '-- lambda_backend.py (Operation, for button labels)
+ '-- lambda_backend.py (Operation; main() passes this module as the backend)
+
+lambda_backend.py
+ '-- lambda1.py  (supplied interpreter: d0exp_fvset, d0exp_evaluate, constructors)
 ```
 
-Dependency rules, enforced by the tests and by reading the imports:
+Dependency rules, checked against the imports:
 
-- `model.py` imports only `lambda_backend` for the `Operation`, `Result`, and `Status` types. It imports no web, HTML, or HTTP code, and never calls the backend.
-- `view.py` imports `controller` only for `ViewState` and the button and canned-example tables. It never imports the model or the backend.
+- `model.py` imports `lambda_backend` only for the `Operation`, `Result`, and `Status` types. It never calls the backend and imports no web, HTML, or HTTP code.
+- `view.py` never imports the model. It reads `ViewState` and the button and canned-example tables from the controller. Its one use of the backend module is the `Operation` enum for labels; it calls no backend function.
 - `app.py` is the only module that knows HTTP. It calls the controller and renders through `view.py`.
 - `lambda_backend.py` is the only module that imports `lambda1.py`.
+- `samples.py` imports nothing.
 
 ## Responsibility table
 
