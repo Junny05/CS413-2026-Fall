@@ -18,7 +18,6 @@ The student asked the assistant to check in before every step. Each step was pro
 8. Write the controller (`controller.py`) and tests. The student chose the standard library over Flask for the web layer.
 9. Write the web layer (`view.py`, `app.py`) and HTTP tests. Run the server for the student to try in Chrome.
 10. Browser smoke test: the student declined the Chrome extension, so the assistant wrote a manual checklist instead of running a browser test.
-11. Write TESTING.md, README.md, ARCHITECTURE.md, and this transcript.
 
 ## Important prompts and what the assistant suggested
 
