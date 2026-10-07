@@ -23,18 +23,26 @@ button:disabled { color: #555; }
 pre { white-space: pre-wrap; word-wrap: break-word; background: #f3f3f3; padding: .6rem; border: 1px solid #bbb; }
 """
 
-DRAFT_SCRIPT = """
+PAGE_SCRIPT = """
 (function () {
   var editor = document.getElementById('editor');
   var timer = null;
-  if (!editor) return;
-  editor.addEventListener('input', function () {
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      fetch('/draft', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({text: editor.value})});
-    }, 300);
-  });
+  if (editor) {
+    editor.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        fetch('/draft', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({text: editor.value})});
+      }, 300);
+    });
+  }
+  if (document.body.dataset.busy === 'true') {
+    var poll = setInterval(function () {
+      fetch('/status').then(function (r) { return r.json(); }).then(function (s) {
+        if (!s.busy) { clearInterval(poll); location.reload(); }
+      });
+    }, 500);
+  }
 })();
 """
 
@@ -129,18 +137,17 @@ def render_page(state: ViewState, notice: str = "") -> str:
     status = (f"Busy: {LABELS[state.busy]} is running." if state.busy is not None
               else "Idle.")
     pending = " Unapplied edits present." if state.has_pending else ""
-    refresh = '<meta http-equiv="refresh" content="1">' if state.busy is not None else ""
+    busy = "true" if state.busy is not None else "false"
     shown = " ".join(part for part in (notice, state.message) if part)
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{refresh}
 <title>LAMBDA Front-End</title>
 <style>{STYLE}</style>
 </head>
-<body>
+<body data-busy="{busy}">
 <h1>LAMBDA Front-End</h1>
 <p>Source: <strong>{html.escape(name)}</strong> · Revision: <strong>{revision}</strong></p>
 <p class="status" role="status" aria-live="polite">{html.escape(status + pending)}</p>
@@ -149,7 +156,7 @@ def render_page(state: ViewState, notice: str = "") -> str:
 {_editor(state)}
 {_actions(state)}
 {_results(state)}
-<script>{DRAFT_SCRIPT}</script>
+<script>{PAGE_SCRIPT}</script>
 </body>
 </html>
 """

@@ -7,9 +7,10 @@ from urllib.parse import unquote, urlsplit
 import pytest
 
 import lambda_backend
-from app import make_server
+from app import MAX_REQUEST_BYTES, make_server
 from controller import Controller
-from model import SourceModel
+from model import MAX_SOURCE_BYTES, SourceModel
+from samples import FACTORIAL
 
 
 @pytest.fixture
@@ -198,20 +199,53 @@ def test_unknown_action_and_route_are_refused(server):
     assert "Unknown route" in notice_of(location)
 
 
-def test_oversized_request_is_refused(server):
+def test_quote_heavy_edit_at_limit_is_accepted(server):
+    httpd, controller = server
+    form(httpd, "/manual")
+    text = '"' * MAX_SOURCE_BYTES
+    _, location, _ = form(httpd, "/apply", text=text)
+    assert notice_of(location) == ""
+    assert controller.snapshot().applied_text == text
+
+
+def test_quote_heavy_edit_over_limit_gets_size_notice(server):
+    httpd, controller = server
+    form(httpd, "/canned", key="factorial")
+    text = '"' * (MAX_SOURCE_BYTES + 1)
+    status, location, _ = form(httpd, "/apply", text=text)
+    assert status == 303
+    assert "64 KiB limit" in notice_of(location)
+    assert controller.snapshot().applied_text == FACTORIAL
+
+
+def test_request_beyond_form_cap_gets_size_notice(server):
     httpd, _ = server
-    status, _, _ = send(httpd, "POST", "/apply", b"x" * (300 * 1024), {
+    body = b"x" * (MAX_REQUEST_BYTES + 1)
+    status, location, _ = send(httpd, "POST", "/apply", body, {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Content-Length": str(300 * 1024)})
-    assert status == 413
+        "Content-Length": str(len(body))})
+    assert status == 303
+    assert "64 KiB limit" in notice_of(location)
 
 
-def test_busy_page_refreshes_until_done(server):
+def test_status_endpoint_reports_busy_until_done(server):
+    httpd, controller = server
+    form(httpd, "/canned", key="fibonacci")
+    form(httpd, "/run", op="interpret")
+    _, _, status_body = send(httpd, "GET", "/status")
+    wait_idle(controller)
+    _, _, final = send(httpd, "GET", "/status")
+    assert '"busy": false' in final
+    assert status_body in ('{"busy": true}', '{"busy": false}')
+
+
+def test_busy_flag_is_exposed_to_page_script(server):
     httpd, controller = server
     form(httpd, "/canned", key="fibonacci")
     form(httpd, "/run", op="interpret")
     _, _, page = send(httpd, "GET", "/")
     wait_idle(controller)
     _, _, final = send(httpd, "GET", "/")
-    assert "http-equiv=\"refresh\"" not in final
+    assert 'data-busy="false"' in final
+    assert 'http-equiv="refresh"' not in final
     assert "D0Vint(arg1=55)" in final

@@ -1,4 +1,5 @@
 import email.policy
+import json
 import sys
 from email.parser import BytesParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -12,7 +13,7 @@ from view import render_page
 
 HOST = "127.0.0.1"
 PORT = 8000
-MAX_REQUEST_BYTES = MAX_SOURCE_BYTES + 16 * 1024
+MAX_REQUEST_BYTES = 3 * MAX_SOURCE_BYTES + 16 * 1024  # form-encoding can expand each byte to three
 OPERATIONS = {op.value: op for op in Operation}
 
 
@@ -20,17 +21,22 @@ def make_handler(controller: Controller):
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             parts = urlsplit(self.path)
+            if parts.path == "/status":
+                busy = controller.snapshot().busy is not None
+                return self._send(200, json.dumps({"busy": busy}), "application/json")
             if parts.path != "/":
                 return self._send(404, "Not found", "text/plain; charset=utf-8")
             notice = parse_qs(parts.query).get("notice", [""])[0]
             self._send(200, render_page(controller.snapshot(), notice), "text/html; charset=utf-8")
 
         def do_POST(self):
+            path = urlsplit(self.path).path
             length = int(self.headers.get("Content-Length") or 0)
             if length > MAX_REQUEST_BYTES:
-                return self._send(413, "Request is too large.", "text/plain; charset=utf-8")
+                if path == "/draft":
+                    return self._send(413, "", "text/plain; charset=utf-8")
+                return self._redirect(f"Source exceeds the {MAX_SOURCE_BYTES // 1024} KiB limit.")
             body = self.rfile.read(length)
-            path = urlsplit(self.path).path
             if path == "/draft":
                 return self._draft(body)
             try:
