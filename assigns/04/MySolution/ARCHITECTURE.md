@@ -49,7 +49,7 @@ Undeclared-variable case, with the source `D0Eop2("+", D0Evar("x"), D0Eint(1))`:
 6. Background thread: `_work` calls `lambda_backend.lint(source, 1)`.
 7. `lint` calls `read_expression`, which returns a `D0Eop2`. `d0exp_fvset` returns `frozenset({"x"})`. `lint` returns `Result(LINT, 1, LANGUAGE_ERROR, "Undeclared variable(s): x", ("x",))`. Nothing is evaluated.
 8. `_work` calls `_finish`: the controller takes the lock, `SourceModel.finish_operation` clears `busy` and stores the result under `LINT`.
-9. The page refreshes (busy page auto-refreshes; idle page shows the stored result). `view.py` shows "Lint · revision 1 · language_error" and the message, escaped.
+9. The page shows the stored result (a busy page polls `/status` and reloads once the run finishes). `view.py` shows "Lint · revision 1 · language_error" and the message, escaped.
 10. Browser POSTs `/run` with `op=interpret`. Steps 5–9 repeat with `interpret`. `lambda_backend.interpret` parses the same expression, starts a spawned process, and evaluates `d0exp_evaluate(expr, ENVnil())`. The unbound `x` yields the error sentinel, and the enclosing `+` raises `TypeError`. The child reports `("runtime", "TypeError: ...")`, and the result is `RUNTIME_ERROR`. The Interpret result is shown separately from the Lint result, which is what the assignment asks us to demonstrate.
 
 A closed expression such as `D0Elet("x", D0Eint(1), D0Evar("x"))` passes Lint (`OK`, "No free variables found.") and interprets to `D0Vint(arg1=1)`.
@@ -79,6 +79,24 @@ Result(operation: Operation, revision: int | None, status: Status, message: str,
 **1. Interpretation runs in a child process.** `d0exp_evaluate` is ordinary Python recursion and can loop forever. A thread cannot be killed in Python, so a nonterminating program would keep the page busy indefinitely. A child process can be terminated at the deadline. The cost is a process start on each Interpret (about 40 ms here) and the need for the expression to be picklable (the constructor dataclasses are). We accept that cost for a bound the assignment requires.
 
 **2. The model holds state rules; the controller holds coordination.** The model refuses an action if it would break a rule (pending edits, busy, no source), but it never calls the backend or starts a thread. The controller does the calling, locking, and background work, then tells the model the result. The benefit is that the model is testable with no concurrency and no interpreter. The cost is that the controller must remember to lock around every model access. A single `RLock` in the controller does that, and the busy flag in the model is what makes concurrent requests safe to reject rather than queue.
+
+## Artifact contract (intended, not implemented)
+
+An artifact is produced only by `compile(source, revision)` and must carry:
+
+| Field | Meaning |
+| --- | --- |
+| `revision` | The source revision it was compiled from. Required. |
+| `location` | Where the generated code lives (for example, a temporary file path or a Python callable). Owned by the compiler adapter. |
+| `producer` | The operation that produced it, always `compile`. |
+
+Rules the model enforces (intended):
+
+- An artifact is stored only if its `revision` equals the model's current revision.
+- Every accepted source change clears the artifact slot, and so does any failed recompilation. Execute therefore never sees an artifact for old source.
+- `execute(artifact, revision)` runs the artifact as-is. It never recompiles and never falls back to interpretation.
+
+Until a compiler exists, the slot is always empty and Execute is disabled.
 
 ## Replacing placeholders with real type-checking and compilation
 

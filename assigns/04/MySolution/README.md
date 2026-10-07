@@ -6,7 +6,7 @@ Architecture: see [ARCHITECTURE.md](ARCHITECTURE.md). Test results and the manua
 
 ## Runtime versions
 
-- Python 3.13.11 (used for development; any Python 3.12 or later works, as `lambda1.py` requires 3.12+ for `type` statements)
+- Python 3.13.11 (used for development and all test runs). `lambda1.py` requires Python 3.12+ for `type` statements; Python 3.12 has not been tested.
 - pytest 9.1.1 (the only dependency, pinned in `requirements.txt`)
 - Standard library only for the web layer (`http.server`, `email`, `urllib`)
 
@@ -27,7 +27,7 @@ python3 -m venv .venv
 ./.venv/bin/python -m pytest -q
 ```
 
-Expected: `106 passed`.
+Expected: `109 passed`.
 
 ## Start the application
 
@@ -71,11 +71,11 @@ Input is a single Python constructor expression of type `d0exp`, using only the 
 
 ## Execution bounds
 
-- Source size limit: **64 KiB** (UTF-8 bytes). Larger uploads or edits are rejected; the HTTP request body is capped at 80 KiB.
+- Source size limit: **64 KiB** (UTF-8 bytes). Larger uploads or edits are rejected with a notice. Typed edits are sent form-encoded, which can expand each byte to three, so the HTTP request body is capped at 208 KiB (3 × 64 KiB + 16 KiB).
 - Interpret runs in a separate process with a **5-second** timeout. On timeout the process is terminated and the result is `timeout`.
 - Recursion that exceeds Python's recursion limit is reported as a runtime error.
 - Lint does not evaluate anything, so it has no time bound beyond parsing.
-- One operation runs at a time; while it runs, the page shows "Busy" and actions and edits are disabled. The page refreshes itself once per second during the run.
+- One operation runs at a time; while it runs, the page shows "Busy" and actions and edits are disabled. While a run is in progress, the page polls `/status` twice a second and reloads when the run finishes.
 
 ## Known limitations
 
