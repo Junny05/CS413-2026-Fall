@@ -30,7 +30,7 @@ The student asked the assistant to check in before every step. Each step was pro
 ## How the output was reviewed and tested
 
 - Every module was run against the automated tests before the next step. Final state: 109 tests passing (`./.venv/bin/python -m pytest -q`).
-- **Audit after the first commits:** a review against the full assignment found that typed edits up to the 64 KiB limit were rejected by the form-body cap (form encoding expanded them about threefold), and the busy page reloaded itself every second. Both were fixed and tested. The assistant's README also claimed Python 3.12 works without testing it; the suite was then run on Python 3.12.15 from a clean export and all 109 tests passed.
+- **Audit after the first commits:** a review against the full assignment found that typed edits up to the 64 KiB limit were rejected by the form-body cap (form encoding expanded them about threefold), and the busy page reloaded itself every second. Both were fixed and tested.
 - The lint and interpret behavior was checked directly against the examples in `examples/`, including the open-variable and runtime-failure examples.
 - The web server was started and fetched with `curl`, and then the student opened it in Chrome to confirm it works.
 - Some assistant output was wrong and was corrected after testing or review. These are the ones worth recording:
