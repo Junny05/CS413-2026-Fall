@@ -93,6 +93,8 @@ MVC made the most difference to testing. The model enforces the rules that matte
 
 Separation was hardest for state that several parts touch. The busy flag has to live in the model so that edits and source replacement can be refused, but it is set by the controller around a background thread, so the controller takes a lock around every model access. The rejected-edit rule also needed care: the model keeps the rejected text as the pending draft, so the editor can show it again, and the view has no say in that.
 
+Two bugs stood out. First, indented multi-line input failed to parse, because the lines after a comment kept their indentation; dedenting the input fixed it. Second, typed edits near the 64 KiB limit were refused, because form encoding expands each byte to up to three and my request cap was too small. It showed a bare error instead of the size notice.
+
 A future change the architecture makes easier is a real compiler. `Compile` would produce an artifact, `Execute` would take it, and the model already has an artifact slot that is cleared on every revision, so stale generated code cannot be run. The browser code would not change: it renders the same snapshot and the same buttons, and only the backend object would gain a working `compile` and `execute`.
 
 ## Sample inputs
