@@ -86,6 +86,9 @@ nontermination. Tests use smaller, case-appropriate budgets (typically
 
 ## Slides and recording
 
-Not yet produced in this iteration; see `AI-TRANSCRIPT.md` for progress
-notes. To be added before submission, along with their filenames or links
-here per the assignment's `README.md` requirement.
+Slides (PDF): `slides.pdf`, in this directory. Editable source:
+https://docs.google.com/presentation/d/1DvpwWvFtkiYTx_jiCoWCI87l6IVQnfozAvCWTE5TH8M/edit?usp=sharing
+
+Presentation recording: `presentation.mp4`, in this directory (~16:44).
+Also available at:
+https://docs.google.com/videos/d/1_Zh2LeVLm7pz4GeJcwUsp7AaqTBBg3ooE8jMAkUTIbk/play
